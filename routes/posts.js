@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const Post = require('../models/Post');
+const { Sequelize, DataTypes } = require("sequelize");
+
 const router = express.Router();
 
 // Multer configuration for file uploads
@@ -15,78 +16,134 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Initialize Sequelize
+const sequelize = new Sequelize(
+    process.env.DB_URL,
+    {
+        dialect: "postgres",
+        logging: false,
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false,
+            },
+        },
+    }
+);
+
+sequelize.sync().then(() => {
+    console.log("Database connected");
+}).catch((err) => {
+    console.log(err);
+});
+
+// Define the Post model
+const Post = sequelize.define('Post', {
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    content: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
+    imageFile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: ''
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.NOW
+    }
+}, {
+    tableName: 'posts',
+    timestamps: true, 
+});
+
 // Route to create a new post
 router.post('/', upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
-    const imageFile = req.file ? req.file.filename : '';
+    const imageFile = req.file;
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
     }
 
-    const newPost = new Post({
-        title,
-        content,
-        imageFile
-    });
-
     try {
-        const savedPost = await newPost.save();
-        res.status(201).json(savedPost);
-    } catch (err) {
-        res.status(500).json({ error: 'Unable to create post' });
+        const postImageUrl = imageFile ? `/uploads/${imageFile.filename}` : null;
+
+        const newPost = await Post.create({
+            title,
+            content,
+            imageFile: imageFile ? imageFile.filename : '',
+        });
+
+        res.status(201).json({
+            message: 'Post created successfully!',
+            post: newPost
+        });
+    } catch (error) {
+        console.error('Error creating post:', error);
+        res.status(500).json({ message: 'Failed to create post. Please try again.' });
     }
 });
 
 // Route to get all posts
 router.get('/', async (req, res) => {
     try {
-        const posts = await Post.find();
-        res.json(posts);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        const posts = await Post.findAll();
+        res.status(200).json(posts);
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+        res.status(500).json({ message: 'Failed to fetch posts. Please try again.' });
     }
 });
 
 // Route to get a single post by ID
 router.get('/:id', async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findByPk(req.params.id);
         if (post) {
-            res.json(post);
+            res.status(200).json(post);
         } else {
-            res.status(404).json({ message: 'Post not found' });
+            res.status(404).json({ message: 'Post not found.' });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        console.error('Error fetching post:', error);
+        res.status(500).json({ message: 'Failed to fetch post. Please try again.' });
     }
 });
 
 // Route to update a post by ID
 router.put('/:id', async (req, res) => {
     try {
-        const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const updatedPost = await Post.findByPk(req.params.id);
         if (updatedPost) {
-            res.json(updatedPost);
+            await updatedPost.update(req.body);
+            res.status(200).json(updatedPost);
         } else {
-            res.status(404).json({ message: 'Post not found' });
+            res.status(404).json({ message: 'Post not found.' });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ message: 'Failed to update post. Please try again.' });
     }
 });
 
 // Route to delete a post by ID
 router.delete('/:id', async (req, res) => {
     try {
-        const deletedPost = await Post.findByIdAndDelete(req.params.id);
+        const deletedPost = await Post.findByPk(req.params.id);
         if (deletedPost) {
-            res.json({ message: 'Post deleted successfully' });
+            await deletedPost.destroy();
+            res.status(200).json({ message: 'Post deleted successfully.' });
         } else {
-            res.status(404).json({ message: 'Post not found' });
+            res.status(404).json({ message: 'Post not found.' });
         }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        res.status(500).json({ message: 'Failed to delete post. Please try again.' });
     }
 });
 
