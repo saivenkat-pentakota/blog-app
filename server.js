@@ -21,7 +21,7 @@ app.use(cors());
 app.use('/uploads', express.static(uploadDir));
 
 // Import the post routes
-const postRoutes = require('./posts');
+const postRoutes = require('./routes/posts');
 app.use('/posts', postRoutes);
 
 app.listen(port, () => {
