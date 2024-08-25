@@ -71,8 +71,6 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 
     try {
-        const postImageUrl = imageFile ? `/uploads/${imageFile.filename}` : null;
-
         const newPost = await Post.create({
             title,
             content,
