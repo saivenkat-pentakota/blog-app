@@ -17,8 +17,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // server.js
 app.use(cors({
-    origin: 'http://localhost:3000' // Adjust to match your client's origin
-  }));
+    origin: 'https://blog-client-mptr.onrender.com', // Adjust to match your client's deployed origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
   
 
 // Serve static files from the "uploads" directory
