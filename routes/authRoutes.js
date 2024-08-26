@@ -18,7 +18,6 @@ router.post('/signup', [
     const { email, password } = req.body;
 
     try {
-        // Check if the email already exists
         const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ error: 'Email is already registered' });
