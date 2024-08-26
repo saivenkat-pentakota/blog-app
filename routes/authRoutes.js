@@ -33,7 +33,7 @@ router.post('/signup', [
         const token = jwt.sign({ userId: newUser.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ token });
     } catch (err) {
-        console.error('Sign Up Error:', err.message); // Log detailed error message
+        console.error('Sign Up Error:', err.message);
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
@@ -66,14 +66,13 @@ router.post('/login', [
         const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     } catch (err) {
-        console.error('Login Error:', err); // Log the error for debugging
+        console.error('Login Error:', err);
         res.status(500).send('Server error');
     }
 });
 
 // Logout Route
 router.post('/logout', (req, res) => {
-    // This assumes token invalidation is handled client-side by removing the token
     res.status(200).send('Logged out');
 });
 
@@ -121,4 +120,4 @@ router.get('/user', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router; // Correct export statement
