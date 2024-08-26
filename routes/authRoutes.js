@@ -99,6 +99,7 @@ router.get('/check', async (req, res) => {
     }
 });
 
+
 // User Profile Route
 router.get('/user', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
