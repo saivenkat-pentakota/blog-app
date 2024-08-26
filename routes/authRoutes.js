@@ -30,7 +30,7 @@ router.post('/signup', [
             [email, hashedPassword]
         );
 
-        const token = jwt.sign({ userId: newUser.rows[0].id }, process.env.JWT_SECRET);
+        const token = jwt.sign({ userId: newUser.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ token });
     } catch (err) {
         console.error('Sign Up Error:', err.message); // Log detailed error message
@@ -63,11 +63,39 @@ router.post('/login', [
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET);
+        const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     } catch (err) {
         console.error('Login Error:', err); // Log the error for debugging
         res.status(500).send('Server error');
+    }
+});
+
+// Logout Route
+router.post('/logout', (req, res) => {
+    // This assumes token invalidation is handled client-side by removing the token
+    res.status(200).send('Logged out');
+});
+
+// Check Authentication Status
+router.get('/check', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ isLoggedIn: false });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await pool.query('SELECT email FROM users WHERE id = $1', [decoded.userId]);
+
+        if (user.rows.length > 0) {
+            res.json({ isLoggedIn: true, email: user.rows[0].email });
+        } else {
+            res.json({ isLoggedIn: false });
+        }
+    } catch (err) {
+        res.status(401).json({ isLoggedIn: false });
     }
 });
 
