@@ -5,7 +5,7 @@ const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 5000; // Default to 5000 if PORT is not set
+const port = process.env.PORT || 5000; 
 
 // Ensure the uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-    origin: 'https://blog-client-mptr.onrender.com', // Adjust to match your client's deployed origin
+    origin: 'https://blog-client-mptr.onrender.com', 
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -37,7 +37,7 @@ app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server Error:', err.message || err); // Log server errors with message
+    console.error('Server Error:', err.message || err); 
     res.status(500).json({ error: 'Server Error', details: err.message || 'An error occurred' });
 });
 
