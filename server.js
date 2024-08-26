@@ -24,6 +24,10 @@ app.use('/uploads', express.static(uploadDir));
 const postRoutes = require('./routes/posts');
 app.use('/posts', postRoutes);
 
+// Import the auth routes
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
