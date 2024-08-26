@@ -5,7 +5,7 @@ const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT ;
 
 // Ensure the uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -15,7 +15,11 @@ if (!fs.existsSync(uploadDir)) {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+// server.js
+app.use(cors({
+    origin: 'http://localhost:3000' // Adjust to match your client's origin
+  }));
+  
 
 // Serve static files from the "uploads" directory
 app.use('/uploads', express.static(uploadDir));
@@ -27,6 +31,11 @@ app.use('/posts', postRoutes);
 // Import the auth routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
+
+app.use((err, req, res, next) => {
+    console.error('Server Error:', err); // Log server errors
+    res.status(500).send('Server Error');
+  });
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);

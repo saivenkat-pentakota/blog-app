@@ -5,31 +5,35 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const pool = require('../db'); 
 
-// Sign Up Route
+// authRoutes.js
+// signup
 router.post('/signup', [
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 })
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { email, password } = req.body;
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await pool.query(
-      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
-      [email, hashedPassword]
-    );
-
-    const token = jwt.sign({ userId: newUser.rows[0].id }, process.env.JWT_SECRET);
-    res.status(201).json({ token });
-  } catch (err) {
-    res.status(500).send('Server error');
-  }
-});
+    body('email').isEmail(),
+    body('password').isLength({ min: 6 })
+  ], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+  
+    const { email, password } = req.body;
+  
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = await pool.query(
+        'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+        [email, hashedPassword]
+      );
+  
+      const token = jwt.sign({ userId: newUser.rows[0].id }, process.env.JWT_SECRET);
+      res.status(201).json({ token });
+    } catch (err) {
+      console.error('Sign Up Error:', err.message); // Log detailed error message
+      res.status(500).json({ error: 'Server error', details: err.message });
+    }
+  });
+  
+  
 
 // Login Route
 router.post('/login', [
@@ -59,6 +63,7 @@ router.post('/login', [
     const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET);
     res.json({ token });
   } catch (err) {
+    console.error('Login Error:', err); // Log the error for debugging
     res.status(500).send('Server error');
   }
 });
