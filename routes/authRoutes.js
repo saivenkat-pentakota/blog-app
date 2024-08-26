@@ -72,6 +72,8 @@ router.post('/login', [
 
 // Logout Route
 router.post('/logout', (req, res) => {
+    // Typically, logout logic involves clearing the client-side token.
+    // This endpoint can be used to perform additional server-side cleanup if needed.
     res.status(200).send('Logged out');
 });
 
