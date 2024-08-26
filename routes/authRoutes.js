@@ -72,7 +72,6 @@ router.post('/login', [
 
 // Logout Route
 router.post('/logout', (req, res) => {
-    
     res.status(200).send('Logged out');
 });
 
@@ -94,10 +93,10 @@ router.get('/check', async (req, res) => {
             res.json({ isLoggedIn: false });
         }
     } catch (err) {
+        console.error('Error verifying token:', err); // Log detailed error
         res.status(401).json({ isLoggedIn: false });
     }
 });
-
 
 // User Profile Route
 router.get('/user', async (req, res) => {
@@ -117,8 +116,9 @@ router.get('/user', async (req, res) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (err) {
+        console.error('Error verifying token:', err); // Log detailed error
         res.status(401).json({ message: 'Unauthorized' });
     }
 });
 
-module.exports = router;
+module.exports = router; 
