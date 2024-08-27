@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const { Sequelize, DataTypes } = require("sequelize");
 require('dotenv').config(); // Make sure to use dotenv to handle environment variables
+const cors = require('cors');
 
 const router = express.Router();
 
@@ -158,5 +159,8 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Failed to delete post. Please try again.' });
     }
 });
+
+// Serve static files from the 'uploads' directory
+router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 module.exports = router;
