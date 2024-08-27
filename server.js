@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',  // Use environment variable
+    origin: process.env.CORS_ORIGIN || 'https://blog-client-mptr.onrender.com',  // Use your deployed frontend URL
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
