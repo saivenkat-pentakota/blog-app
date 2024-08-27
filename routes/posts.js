@@ -2,19 +2,31 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { Sequelize, DataTypes } = require("sequelize");
+require('dotenv').config(); // Make sure to use dotenv to handle environment variables
 
 const router = express.Router();
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, 'uploads/');  // Ensure this directory exists
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage });
+
+const upload = multer({ 
+    storage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error('Invalid file type'), false);
+        }
+        cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 }  // Limit file size to 5MB
+});
 
 // Initialize Sequelize
 const sequelize = new Sequelize(
@@ -31,11 +43,13 @@ const sequelize = new Sequelize(
     }
 );
 
-sequelize.sync().then(() => {
-    console.log("Database connected");
-}).catch((err) => {
-    console.log(err);
-});
+sequelize.sync()
+    .then(() => {
+        console.log("Database connected");
+    })
+    .catch(err => {
+        console.error('Database connection error:', err);
+    });
 
 // Define the Post model
 const Post = sequelize.define('Post', {
@@ -58,7 +72,7 @@ const Post = sequelize.define('Post', {
     }
 }, {
     tableName: 'posts',
-    timestamps: true, 
+    timestamps: true,
 });
 
 // Route to create a new post
