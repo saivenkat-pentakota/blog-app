@@ -14,6 +14,9 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
+// Serve static files from the "uploads" directory
+app.use('/uploads', express.static(uploadDir));
+
 // Set up multer storage configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -32,14 +35,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',  // Adjust to your frontend URL
+    origin: process.env.CORS_ORIGIN || 'https://blog-client-mptr.onrender.com',
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve static files from the "uploads" directory
-app.use('/uploads', express.static(uploadDir));
+
+
 
 // Import and use the post routes
 const postRoutes = require('./routes/posts');
