@@ -7,11 +7,11 @@ const cookieParser = require('cookie-parser');
 // Initialize PostgreSQL connection pool with detailed configuration
 const pool = new Pool({
     connectionString: process.env.DB_URL,
-    connectionTimeoutMillis: 20000, // Increased timeout
-    max: 20, // Adjust pool size if necessary
-    idleTimeoutMillis: 30000, // Optional: Close idle connections after 30 seconds
-    connectionAcquisitionTimeoutMillis: 5000, // Optional: Timeout for acquiring a connection
-    ssl: { rejectUnauthorized: false } // Disable SSL validation if the server does not support it
+    connectionTimeoutMillis: 20000, 
+    max: 20, 
+    idleTimeoutMillis: 30000, 
+    connectionAcquisitionTimeoutMillis: 5000, 
+    ssl: { rejectUnauthorized: false } 
 });
 
 const router = express.Router();
@@ -21,13 +21,13 @@ router.use(cookieParser());
 
 // User signup
 router.post('/signup', async (req, res) => {
-    const { firstName, lastName, username, phone, email, password } = req.body;
+    const {email, password } = req.body;
 
     try {
-        // Check if the user already exists by email or username
-        const { rows: existingUsers } = await pool.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
+        // Check if the user already exists by email 
+        const { rows: existingUsers } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUsers.length > 0) {
-            return res.status(400).json({ error: 'User with this email or username already exists' });
+            return res.status(400).json({ error: 'User with this email already exists' });
         }
 
         // Hash the password before saving
@@ -35,9 +35,9 @@ router.post('/signup', async (req, res) => {
 
         // Save the new user with additional fields
         const { rows: newUserRows } = await pool.query(
-            `INSERT INTO users (first_name, last_name, username, phone, email, password)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [firstName, lastName, username, phone, email, hashedPassword]
+            `INSERT INTO users (email, password)
+             VALUES ($1, $2) RETURNING *`,
+            [email, hashedPassword]
         );
 
         const newUser = newUserRows[0];
