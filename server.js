@@ -41,6 +41,8 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Server Error', details: err.message || 'An error occurred' });
 });
 
+require('dotenv').config();
+
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
