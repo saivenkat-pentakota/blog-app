@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-    origin: 'https://blog-client-mptr.onrender.com', 
+    origin: 'http://localhost:3000', 
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -31,15 +31,17 @@ app.use('/uploads', express.static(uploadDir));
 const postRoutes = require('./routes/posts');
 app.use('/posts', postRoutes);
 
-// Import and use the auth routes
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+// Integration of authRoutes
+const authRoutes = require('./routes/auth');
+app.use('/auth', authRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message || err); 
     res.status(500).json({ error: 'Server Error', details: err.message || 'An error occurred' });
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
