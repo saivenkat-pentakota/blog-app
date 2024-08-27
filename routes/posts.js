@@ -1,9 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { Sequelize, DataTypes } = require("sequelize");
-require('dotenv').config(); // Make sure to use dotenv to handle environment variables
-const cors = require('cors');
+const { Sequelize, DataTypes } = require('sequelize');
+require('dotenv').config();
 
 const router = express.Router();
 
@@ -33,7 +32,7 @@ const upload = multer({
 const sequelize = new Sequelize(
     process.env.DB_URL,
     {
-        dialect: "postgres",
+        dialect: 'postgres',
         logging: false,
         dialectOptions: {
             ssl: {
@@ -46,7 +45,7 @@ const sequelize = new Sequelize(
 
 sequelize.sync()
     .then(() => {
-        console.log("Database connected");
+        console.log('Database connected');
     })
     .catch(err => {
         console.error('Database connection error:', err);
@@ -159,8 +158,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Failed to delete post. Please try again.' });
     }
 });
-
-// Serve static files from the 'uploads' directory
-router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 module.exports = router;
