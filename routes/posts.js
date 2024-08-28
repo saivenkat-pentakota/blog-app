@@ -128,11 +128,19 @@ router.get('/:id', async (req, res) => {
 });
 
 // Route to update a post by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.single('imageFile'), async (req, res) => {
     try {
         const updatedPost = await Post.findByPk(req.params.id);
         if (updatedPost) {
-            await updatedPost.update(req.body);
+            const { title, content } = req.body;
+            const imageFile = req.file;
+
+            await updatedPost.update({
+                title,
+                content,
+                imageFile: imageFile ? imageFile.filename : updatedPost.imageFile
+            });
+
             res.status(200).json(updatedPost);
         } else {
             res.status(404).json({ message: 'Post not found.' });

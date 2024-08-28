@@ -4,6 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const multer = require('multer');
+const helmet = require('helmet');  // For setting security headers
+const rateLimit = require('express-rate-limit');  // For rate limiting
 
 const app = express();
 const port = process.env.PORT || 5000; 
@@ -27,22 +29,30 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }  // Limit file size to 5MB
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(helmet());  // Add security headers
+
+// Rate limiting for all requests
+app.use(rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.'
+}));
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'https://blog-client-mptr.onrender.com',
+    origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-
-
 
 // Import and use the post routes
 const postRoutes = require('./routes/posts');
