@@ -101,25 +101,11 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 });
 
-// Route to get all posts with pagination
+// Route to get all posts
 router.get('/', async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const offset = (page - 1) * limit;
-
     try {
-        const { count, rows } = await Post.findAndCountAll({
-            limit,
-            offset,
-            order: [['createdAt', 'DESC']],
-        });
-
-        res.status(200).json({
-            totalPosts: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            posts: rows
-        });
+        const posts = await Post.findAll();
+        res.status(200).json(posts);
     } catch (error) {
         console.error('Error fetching posts:', error);
         res.status(500).json({ message: 'Failed to fetch posts. Please try again.' });
@@ -148,6 +134,10 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
         if (updatedPost) {
             const { title, content } = req.body;
             const imageFile = req.file;
+
+            if (!title || !content) {
+                return res.status(400).json({ message: 'Title and content are required.' });
+            }
 
             await updatedPost.update({
                 title,
