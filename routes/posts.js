@@ -101,16 +101,26 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 });
 
-// Route to get all posts
+// Route to get all posts with pagination
 router.get('/', async (req, res) => {
+    const { page = 1, limit = 5 } = req.query;
+
     try {
-        const posts = await Post.findAll();
-        res.status(200).json(posts);
+        const posts = await Post.findAll({
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit)
+        });
+        const totalPosts = await Post.count();
+        res.status(200).json({
+            posts,
+            totalPosts
+        });
     } catch (error) {
         console.error('Error fetching posts:', error);
         res.status(500).json({ message: 'Failed to fetch posts. Please try again.' });
     }
 });
+
 
 // Route to get a single post by ID
 router.get('/:id', async (req, res) => {
