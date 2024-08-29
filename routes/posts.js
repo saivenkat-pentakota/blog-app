@@ -103,15 +103,15 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
 
 // Route to get all posts with pagination
 router.get('/', async (req, res) => {
-    const page = parseInt(req.query.page, 10) || 1;  // Default to page 1
-    const limit = parseInt(req.query.limit, 10) || 5; // Default to 5 posts per page
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
 
     try {
         const { count, rows } = await Post.findAndCountAll({
             limit,
             offset,
-            order: [['createdAt', 'DESC']], // Order by creation date, descending
+            order: [['createdAt', 'DESC']],
         });
 
         res.status(200).json({
