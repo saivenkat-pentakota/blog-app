@@ -67,6 +67,9 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Enable pre-flight across-the-board
+app.options('*', cors());
+
 // Rate limiting for auth routes
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
