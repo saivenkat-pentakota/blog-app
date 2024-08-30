@@ -4,8 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const multer = require('multer');
-const helmet = require('helmet');  // For setting security headers
-const rateLimit = require('express-rate-limit');  // For rate limiting
+const helmet = require('helmet'); 
+const rateLimit = require('express-rate-limit'); 
 
 const app = express();
 const port = process.env.PORT || 5000; 
