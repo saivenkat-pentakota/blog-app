@@ -104,8 +104,16 @@ router.get('/', async (req, res) => {
         const totalPosts = await Post.count();
         const totalPages = Math.ceil(totalPosts / limit);
 
+        // Convert image files to Base64
+        const postsWithImages = posts.map(post => {
+            if (post.imageFile) {
+                post.imageFile = post.imageFile.toString('base64');
+            }
+            return post;
+        });
+
         res.status(200).json({
-            posts,
+            posts: postsWithImages,
             totalPosts,
             currentPage: parseInt(page),
             totalPages
@@ -121,6 +129,10 @@ router.get('/:id', async (req, res) => {
     try {
         const post = await Post.findByPk(req.params.id);
         if (post) {
+            // Convert image file to Base64
+            if (post.imageFile) {
+                post.imageFile = post.imageFile.toString('base64');
+            }
             res.status(200).json(post);
         } else {
             res.status(404).json({ message: 'Post not found.' });
@@ -149,6 +161,11 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
                 imageFile: imageFile ? imageFile.buffer : updatedPost.imageFile,
                 imageFileType: imageFile ? imageFile.mimetype : updatedPost.imageFileType
             });
+
+            // Convert image file to Base64
+            if (updatedPost.imageFile) {
+                updatedPost.imageFile = updatedPost.imageFile.toString('base64');
+            }
 
             res.status(200).json(updatedPost);
         } else {
