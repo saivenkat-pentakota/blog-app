@@ -49,7 +49,7 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB('long'), 
+        type: DataTypes.BLOB('long'),  // Use BLOB for binary data in PostgreSQL
         allowNull: true,
     },
     imageFileType: {
@@ -57,6 +57,10 @@ const Post = sequelize.define('Post', {
         allowNull: true,
     },
     createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    updatedAt: {
         type: DataTypes.DATE,
         defaultValue: Sequelize.NOW
     }
@@ -124,12 +128,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Route to get a single post by ID
 router.get('/:id', async (req, res) => {
     try {
         const post = await Post.findByPk(req.params.id);
         if (post) {
-            // Convert image file to Base64
             if (post.imageFile) {
                 post.imageFile = post.imageFile.toString('base64');
             }
