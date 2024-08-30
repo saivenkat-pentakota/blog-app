@@ -1,6 +1,5 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
@@ -36,12 +35,8 @@ const sequelize = new Sequelize(
 );
 
 sequelize.sync()
-    .then(() => {
-        console.log('Database connected');
-    })
-    .catch(err => {
-        console.error('Database connection error:', err);
-    });
+    .then(() => console.log('Database connected'))
+    .catch(err => console.error('Database connection error:', err));
 
 // Define the Post model
 const Post = sequelize.define('Post', {
@@ -93,7 +88,7 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating post:', error);
-        res.status(500).json({ message: 'Failed to create post. Please try again.' });
+        res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message });
     }
 });
 
@@ -117,7 +112,7 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching posts:', error);
-        res.status(500).json({ message: 'Failed to fetch posts. Please try again.' });
+        res.status(500).json({ message: 'Failed to fetch posts. Please try again.', error: error.message });
     }
 });
 
@@ -132,7 +127,7 @@ router.get('/:id', async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching post:', error);
-        res.status(500).json({ message: 'Failed to fetch post. Please try again.' });
+        res.status(500).json({ message: 'Failed to fetch post. Please try again.', error: error.message });
     }
 });
 
@@ -161,7 +156,7 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
         }
     } catch (error) {
         console.error('Error updating post:', error);
-        res.status(500).json({ message: 'Failed to update post. Please try again.' });
+        res.status(500).json({ message: 'Failed to update post. Please try again.', error: error.message });
     }
 });
 
@@ -177,7 +172,7 @@ router.delete('/:id', async (req, res) => {
         }
     } catch (error) {
         console.error('Error deleting post:', error);
-        res.status(500).json({ message: 'Failed to delete post. Please try again.' });
+        res.status(500).json({ message: 'Failed to delete post. Please try again.', error: error.message });
     }
 });
 
