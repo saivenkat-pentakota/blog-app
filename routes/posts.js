@@ -9,7 +9,7 @@ const router = express.Router();
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, 'uploads/');  // Ensure this directory exists
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
@@ -25,7 +25,7 @@ const upload = multer({
         }
         cb(null, true);
     },
-    limits: { fileSize: 5 * 1024 * 1024 } 
+    limits: { fileSize: 5 * 1024 * 1024 }  // Limit file size to 5MB
 });
 
 // Initialize Sequelize
@@ -101,7 +101,6 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 });
 
-// Route to get all posts with pagination
 router.get('/', async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
 
