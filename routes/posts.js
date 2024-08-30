@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
@@ -101,6 +102,7 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 });
 
+// Route to get all posts with pagination
 router.get('/', async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
 
@@ -110,16 +112,19 @@ router.get('/', async (req, res) => {
             offset: (parseInt(page) - 1) * parseInt(limit)
         });
         const totalPosts = await Post.count();
+        const totalPages = Math.ceil(totalPosts / limit);
+
         res.status(200).json({
             posts,
-            totalPosts
+            totalPosts,
+            currentPage: parseInt(page),
+            totalPages
         });
     } catch (error) {
         console.error('Error fetching posts:', error);
         res.status(500).json({ message: 'Failed to fetch posts. Please try again.' });
     }
 });
-
 
 // Route to get a single post by ID
 router.get('/:id', async (req, res) => {
@@ -148,6 +153,13 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
                 return res.status(400).json({ message: 'Title and content are required.' });
             }
 
+            // Delete the old image if a new one is uploaded
+            if (imageFile && updatedPost.imageFile) {
+                fs.unlink(path.join(__dirname, 'uploads', updatedPost.imageFile), (err) => {
+                    if (err) console.error('Error deleting file:', err);
+                });
+            }
+
             await updatedPost.update({
                 title,
                 content,
@@ -169,6 +181,13 @@ router.delete('/:id', async (req, res) => {
     try {
         const deletedPost = await Post.findByPk(req.params.id);
         if (deletedPost) {
+            // Delete the associated image file
+            if (deletedPost.imageFile) {
+                fs.unlink(path.join(__dirname, 'uploads', deletedPost.imageFile), (err) => {
+                    if (err) console.error('Error deleting file:', err);
+                });
+            }
+
             await deletedPost.destroy();
             res.status(200).json({ message: 'Post deleted successfully.' });
         } else {

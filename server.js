@@ -16,10 +16,15 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
-// Serve static files from the "uploads" directory
-app.use('/uploads', express.static(uploadDir));
+// Serve static files from the "uploads" directory with security headers
+app.use('/uploads', express.static(uploadDir, {
+    setHeaders: (res, path, stat) => {
+        res.set('Content-Security-Policy', "default-src 'self'");
+        res.set('X-Content-Type-Options', 'nosniff');
+    }
+}));
 
-// Set up multer storage configuration
+// Set up multer storage configuration with file type validation
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadDir);
@@ -29,11 +34,30 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const fileTypes = /jpeg|jpg|png|gif/;
+        const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = fileTypes.test(file.mimetype);
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb('Error: Images Only!');
+        }
+    }
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: false, // Adjust based on your needs
+    crossOriginEmbedderPolicy: false // Adjust based on your needs
+}));
 
 // CORS configuration
 app.use(cors({
@@ -43,8 +67,13 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
-
+// Rate limiting for auth routes
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/auth', apiLimiter);
 
 // Import and use the post routes
 const postRoutes = require('./routes/posts');
@@ -57,9 +86,21 @@ app.use('/auth', authRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message || err); 
-    res.status(500).json({ error: 'Server Error', details: err.message || 'An error occurred' });
+    const statusCode = err.statusCode || 500;
+    const errorResponse = {
+        error: 'Server Error',
+        details: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+    };
+    res.status(statusCode).json(errorResponse);
 });
 
-app.listen(port, () => {
+// Start the server with graceful shutdown support
+const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
+});
+
+process.on('SIGTERM', () => {
+    server.close(() => {
+        console.log('Process terminated');
+    });
 });
