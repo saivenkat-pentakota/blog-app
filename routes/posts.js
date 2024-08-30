@@ -1,22 +1,13 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
 const router = express.Router();
 
-// Multer configuration for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');  // Ensure this directory exists
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-
+// Multer configuration for file uploads (in memory)
+const storage = multer.memoryStorage(); // Store files in memory
 const upload = multer({ 
     storage,
     fileFilter: (req, file, cb) => {
@@ -63,9 +54,12 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
+        type: DataTypes.BLOB('long'), // Store image as BLOB
+        allowNull: true,
+    },
+    imageFileType: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: ''
     },
     createdAt: {
         type: DataTypes.DATE,
@@ -89,7 +83,8 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
         const newPost = await Post.create({
             title,
             content,
-            imageFile: imageFile ? imageFile.filename : '',
+            imageFile: imageFile ? imageFile.buffer : null,  // Save image as BLOB
+            imageFileType: imageFile ? imageFile.mimetype : null
         });
 
         res.status(201).json({
@@ -153,17 +148,11 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
                 return res.status(400).json({ message: 'Title and content are required.' });
             }
 
-            // Delete the old image if a new one is uploaded
-            if (imageFile && updatedPost.imageFile) {
-                fs.unlink(path.join(__dirname, 'uploads', updatedPost.imageFile), (err) => {
-                    if (err) console.error('Error deleting file:', err);
-                });
-            }
-
             await updatedPost.update({
                 title,
                 content,
-                imageFile: imageFile ? imageFile.filename : updatedPost.imageFile
+                imageFile: imageFile ? imageFile.buffer : updatedPost.imageFile,
+                imageFileType: imageFile ? imageFile.mimetype : updatedPost.imageFileType
             });
 
             res.status(200).json(updatedPost);
@@ -181,13 +170,6 @@ router.delete('/:id', async (req, res) => {
     try {
         const deletedPost = await Post.findByPk(req.params.id);
         if (deletedPost) {
-            // Delete the associated image file
-            if (deletedPost.imageFile) {
-                fs.unlink(path.join(__dirname, 'uploads', deletedPost.imageFile), (err) => {
-                    if (err) console.error('Error deleting file:', err);
-                });
-            }
-
             await deletedPost.destroy();
             res.status(200).json({ message: 'Post deleted successfully.' });
         } else {

@@ -24,7 +24,7 @@ app.use('/uploads', express.static(uploadDir, {
     }
 }));
 
-// Set up multer storage configuration with file type validation
+// Set up multer storage configuration with file type and size validation
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadDir);
@@ -36,6 +36,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
     fileFilter: (req, file, cb) => {
         const fileTypes = /jpeg|jpg|png|gif/;
         const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
@@ -53,9 +54,16 @@ const upload = multer({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Security middleware
+// Security middleware with helmet
 app.use(helmet({
-    contentSecurityPolicy: false, // Adjust based on your needs
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"]
+        }
+    },
     crossOriginEmbedderPolicy: false // Adjust based on your needs
 }));
 
@@ -102,8 +110,12 @@ const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
 
-process.on('SIGTERM', () => {
+// Graceful shutdown
+const shutdown = () => {
     server.close(() => {
         console.log('Process terminated');
     });
-});
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
