@@ -34,9 +34,9 @@ const sequelize = new Sequelize(
     }
 );
 
-sequelize.sync()
-    .then(() => console.log('Database connected'))
-    .catch(err => console.error('Database connection error:', err));
+sequelize.sync({ alter: true })
+    .then(() => console.log('Database synchronized'))
+    .catch(err => console.error('Database synchronization error:', err));
 
 // Define the Post model
 const Post = sequelize.define('Post', {
@@ -49,7 +49,7 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB('long'), // Store image as BLOB
+        type: DataTypes.BLOB('long'), 
         allowNull: true,
     },
     imageFileType: {
@@ -78,7 +78,7 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
         const newPost = await Post.create({
             title,
             content,
-            imageFile: imageFile ? imageFile.buffer : null,  // Save image as BLOB
+            imageFile: imageFile ? imageFile.buffer : null,
             imageFileType: imageFile ? imageFile.mimetype : null
         });
 
