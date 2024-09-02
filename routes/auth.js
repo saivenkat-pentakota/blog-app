@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 const cookieParser = require('cookie-parser');
 const { body, validationResult } = require('express-validator');
 
-// Initialize PostgreSQL connection pool with detailed configuration
+// Initialize PostgreSQL connection pool
 const pool = new Pool({
     connectionString: process.env.DB_URL,
     connectionTimeoutMillis: 20000,

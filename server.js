@@ -75,6 +75,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Trust proxy to correctly handle `X-Forwarded-For` header for rate limiting
+app.set('trust proxy', true);
 
 // Rate limiting for API routes
 const apiLimiter = rateLimit({

@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
-const authenticate = require('../middleware/authenticate');
+const auth = require('../middleware/auth'); // Updated import
 
 const router = express.Router();
 
@@ -77,7 +77,7 @@ const Post = sequelize.define('Post', {
 // Middleware to verify ownership
 const verifyOwnership = async (req, res, next) => {
     const postId = req.params.id;
-    const userId = req.user.id; 
+    const userId = req.user?.id; 
 
     try {
         const post = await Post.findByPk(postId);
@@ -91,10 +91,10 @@ const verifyOwnership = async (req, res, next) => {
 };
 
 // Route to create a new post
-router.post('/', upload.single('imageFile'), async (req, res) => {
+router.post('/', auth, upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
     const imageFile = req.file;
-    const userId = req.user.id; 
+    const userId = req.user?.id; 
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
@@ -152,9 +152,9 @@ router.get('/', async (req, res) => {
 });
 
 // Route to get all posts for the authenticated user
-router.get('/userposts', authenticate, async (req, res) => {
+router.get('/userposts', auth, async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
     if (!userId) {
         return res.status(400).json({ message: 'User ID is required.' });
@@ -170,6 +170,7 @@ router.get('/userposts', authenticate, async (req, res) => {
         const totalPosts = await Post.count({ where: { userId } });
         const totalPages = Math.ceil(totalPosts / limit);
 
+        // Convert image files to Base64
         const postsWithImages = posts.map(post => {
             if (post.imageFile) {
                 post.imageFile = post.imageFile.toString('base64');
@@ -191,37 +192,45 @@ router.get('/userposts', authenticate, async (req, res) => {
 
 // Route to get a post by ID
 router.get('/:id', async (req, res) => {
+    const postId = req.params.id;
+
     try {
-        const post = await Post.findByPk(req.params.id);
-        if (post) {
-            if (post.imageFile) {
-                post.imageFile = post.imageFile.toString('base64');
-            }
-            res.status(200).json(post);
-        } else {
-            res.status(404).json({ message: 'Post not found.' });
+        const post = await Post.findByPk(postId);
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
         }
+
+        if (post.imageFile) {
+            post.imageFile = post.imageFile.toString('base64');
+        }
+
+        res.status(200).json(post);
     } catch (error) {
         console.error('Error fetching post:', error);
         res.status(500).json({ message: 'Failed to fetch post. Please try again.', error: error.message });
     }
 });
 
-// Route to update a post by ID
-router.put('/:id', authenticate, verifyOwnership, upload.single('imageFile'), async (req, res) => {
+// Route to update a post
+router.put('/:id', auth, verifyOwnership, upload.single('imageFile'), async (req, res) => {
+    const postId = req.params.id;
     const { title, content } = req.body;
     const imageFile = req.file;
 
     try {
-        const post = await Post.findByPk(req.params.id);
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
+        const post = await Post.findByPk(postId);
 
-        await post.update({
-            title: title || post.title,
-            content: content || post.content,
-            imageFile: imageFile ? imageFile.buffer : post.imageFile,
-            imageFileType: imageFile ? imageFile.mimetype : post.imageFileType
-        });
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        post.title = title || post.title;
+        post.content = content || post.content;
+        post.imageFile = imageFile ? imageFile.buffer : post.imageFile;
+        post.imageFileType = imageFile ? imageFile.mimetype : post.imageFileType;
+
+        await post.save();
 
         res.status(200).json({ message: 'Post updated successfully!', post });
     } catch (error) {
@@ -230,11 +239,16 @@ router.put('/:id', authenticate, verifyOwnership, upload.single('imageFile'), as
     }
 });
 
-// Route to delete a post by ID
-router.delete('/:id', authenticate, verifyOwnership, async (req, res) => {
+// Route to delete a post
+router.delete('/:id', auth, verifyOwnership, async (req, res) => {
+    const postId = req.params.id;
+
     try {
-        const post = await Post.findByPk(req.params.id);
-        if (!post) return res.status(404).json({ message: 'Post not found.' });
+        const post = await Post.findByPk(postId);
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
 
         await post.destroy();
         res.status(200).json({ message: 'Post deleted successfully!' });
