@@ -90,6 +90,8 @@ const verifyOwnership = async (req, res, next) => {
     }
 };
 
+
+// create post
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
     const imageFile = req.file;
@@ -113,10 +115,11 @@ router.post('/', auth, upload.single('imageFile'), async (req, res) => {
             post: newPost
         });
     } catch (error) {
-        console.error('Error creating post:', error); // Log detailed error
-        res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message });
+        console.error('Error creating post:', error.message || error); // Detailed error logging
+        res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message || error });
     }
 });
+
 
 // Route to get all posts
 router.get('/', async (req, res) => {
