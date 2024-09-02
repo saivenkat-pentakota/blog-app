@@ -94,7 +94,7 @@ const verifyOwnership = async (req, res, next) => {
 router.post('/', upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
     const imageFile = req.file;
-    const userId = req.user.id; // Assuming user ID is available from authentication
+    const userId = req.user.id; 
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
@@ -106,7 +106,7 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
             content,
             imageFile: imageFile ? imageFile.buffer : null,
             imageFileType: imageFile ? imageFile.mimetype : null,
-            userId // Save the userId with the post
+            userId 
         });
 
         res.status(201).json({
