@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
+const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
@@ -76,7 +77,7 @@ const Post = sequelize.define('Post', {
 // Middleware to verify ownership
 const verifyOwnership = async (req, res, next) => {
     const postId = req.params.id;
-    const userId = req.user.id; // Assuming user ID is available from authentication
+    const userId = req.user.id; 
 
     try {
         const post = await Post.findByPk(postId);
@@ -118,7 +119,7 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
     }
 });
 
-// Route to get all posts with pagination
+// Route to get all posts
 router.get('/', async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
 
@@ -150,6 +151,44 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Route to get all posts for the authenticated user
+router.get('/userspost', authenticate, async (req, res) => {
+    const { page = 1, limit = 5 } = req.query;
+    const userId = req.user.id;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    try {
+        const posts = await Post.findAll({
+            where: { userId },
+            limit: parseInt(limit),
+            offset: (parseInt(page) - 1) * parseInt(limit)
+        });
+
+        const totalPosts = await Post.count({ where: { userId } });
+        const totalPages = Math.ceil(totalPosts / limit);
+
+        const postsWithImages = posts.map(post => {
+            if (post.imageFile) {
+                post.imageFile = post.imageFile.toString('base64');
+            }
+            return post;
+        });
+
+        res.status(200).json({
+            posts: postsWithImages,
+            totalPosts,
+            currentPage: parseInt(page),
+            totalPages
+        });
+    } catch (error) {
+        console.error('Error fetching user posts:', error);
+        res.status(500).json({ message: 'Failed to fetch posts. Please try again.', error: error.message });
+    }
+});
+
 // Route to get a post by ID
 router.get('/:id', async (req, res) => {
     try {
@@ -169,33 +208,22 @@ router.get('/:id', async (req, res) => {
 });
 
 // Route to update a post by ID
-router.put('/:id', upload.single('imageFile'), verifyOwnership, async (req, res) => {
+router.put('/:id', authenticate, verifyOwnership, upload.single('imageFile'), async (req, res) => {
+    const { title, content } = req.body;
+    const imageFile = req.file;
+
     try {
-        const updatedPost = await Post.findByPk(req.params.id);
-        if (updatedPost) {
-            const { title, content } = req.body;
-            const imageFile = req.file;
+        const post = await Post.findByPk(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-            if (!title || !content) {
-                return res.status(400).json({ message: 'Title and content are required.' });
-            }
+        await post.update({
+            title: title || post.title,
+            content: content || post.content,
+            imageFile: imageFile ? imageFile.buffer : post.imageFile,
+            imageFileType: imageFile ? imageFile.mimetype : post.imageFileType
+        });
 
-            await updatedPost.update({
-                title,
-                content,
-                imageFile: imageFile ? imageFile.buffer : updatedPost.imageFile,
-                imageFileType: imageFile ? imageFile.mimetype : updatedPost.imageFileType
-            });
-
-            // Convert image file to Base64
-            if (updatedPost.imageFile) {
-                updatedPost.imageFile = updatedPost.imageFile.toString('base64');
-            }
-
-            res.status(200).json(updatedPost);
-        } else {
-            res.status(404).json({ message: 'Post not found.' });
-        }
+        res.status(200).json({ message: 'Post updated successfully!', post });
     } catch (error) {
         console.error('Error updating post:', error);
         res.status(500).json({ message: 'Failed to update post. Please try again.', error: error.message });
@@ -203,42 +231,16 @@ router.put('/:id', upload.single('imageFile'), verifyOwnership, async (req, res)
 });
 
 // Route to delete a post by ID
-router.delete('/:id', verifyOwnership, async (req, res) => {
+router.delete('/:id', authenticate, verifyOwnership, async (req, res) => {
     try {
-        const deletedPost = await Post.findByPk(req.params.id);
-        if (deletedPost) {
-            await deletedPost.destroy();
-            res.status(200).json({ message: 'Post deleted successfully.' });
-        } else {
-            res.status(404).json({ message: 'Post not found.' });
-        }
+        const post = await Post.findByPk(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+        await post.destroy();
+        res.status(200).json({ message: 'Post deleted successfully!' });
     } catch (error) {
         console.error('Error deleting post:', error);
         res.status(500).json({ message: 'Failed to delete post. Please try again.', error: error.message });
-    }
-});
-
-// Route to get posts for the authenticated user
-router.get('/user', async (req, res) => {
-    const userId = req.user.id; 
-
-    try {
-        const posts = await Post.findAll({
-            where: { userId }
-        });
-
-        // Convert image files to Base64
-        const postsWithImages = posts.map(post => {
-            if (post.imageFile) {
-                post.imageFile = post.imageFile.toString('base64');
-            }
-            return post;
-        });
-
-        res.status(200).json({ posts: postsWithImages });
-    } catch (error) {
-        console.error('Error fetching user posts:', error);
-        res.status(500).json({ message: 'Failed to fetch user posts. Please try again.', error: error.message });
     }
 });
 
