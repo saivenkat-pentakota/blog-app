@@ -2,12 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
-const auth = require('./auth'); 
+const auth = require('./auth');
 
 const router = express.Router();
 
 // Multer configuration for file uploads (in memory)
-const storage = multer.memoryStorage(); // Store files in memory
+const storage = multer.memoryStorage();
 const upload = multer({ 
     storage,
     fileFilter: (req, file, cb) => {
@@ -50,7 +50,7 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB,  
+        type: DataTypes.BLOB,
         allowNull: true,
     },
     imageFileType: {
@@ -77,7 +77,7 @@ const Post = sequelize.define('Post', {
 // Middleware to verify ownership
 const verifyOwnership = async (req, res, next) => {
     const postId = req.params.id;
-    const userId = req.user?.id; 
+    const userId = req.user?.id;
 
     try {
         const post = await Post.findByPk(postId);
@@ -93,7 +93,7 @@ const verifyOwnership = async (req, res, next) => {
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
     const imageFile = req.file;
-    const userId = req.user?.id; 
+    const userId = req.user?.id;
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
@@ -117,7 +117,6 @@ router.post('/', auth, upload.single('imageFile'), async (req, res) => {
         res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message });
     }
 });
-
 
 // Route to get all posts
 router.get('/', async (req, res) => {
