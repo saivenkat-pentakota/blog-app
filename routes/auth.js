@@ -48,7 +48,7 @@ const User = sequelize.define('User', {
 
 // Middleware to authenticate JWT tokens
 const authenticateJWT = (req, res, next) => {
-    const token = req.header('Authorization')?.split(' ')[1];
+    const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -59,7 +59,7 @@ const authenticateJWT = (req, res, next) => {
 };
 
 // Route to register a new user
-router.post('/register', async (req, res) => {
+router.post('/signup', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -97,6 +97,19 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ message: 'Failed to login. Please try again.', error: error.message });
+    }
+});
+
+// Example protected route (requires authentication)
+router.get('/profile', authenticateJWT, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Failed to fetch user profile.', error: error.message });
     }
 });
 

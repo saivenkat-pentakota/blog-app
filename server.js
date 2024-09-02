@@ -84,7 +84,7 @@ const apiLimiter = rateLimit({
     max: 100, // Limit each IP to 100 requests per windowMs
     message: 'Too many requests from this IP, please try again later.'
 });
-app.use(apiLimiter);
+app.use('/api/', apiLimiter);
 
 // Import and use the routes
 const postRoutes = require('./routes/posts');
