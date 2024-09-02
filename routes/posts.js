@@ -56,6 +56,10 @@ const Post = sequelize.define('Post', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    userId: { // Add userId field to track post ownership
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     createdAt: {
         type: DataTypes.DATE,
         defaultValue: Sequelize.NOW
@@ -69,10 +73,27 @@ const Post = sequelize.define('Post', {
     timestamps: true,
 });
 
+// Middleware to verify ownership
+const verifyOwnership = async (req, res, next) => {
+    const postId = req.params.id;
+    const userId = req.user.id; // Assuming user ID is stored in req.user from authentication
+
+    try {
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ message: 'Post not found.' });
+        if (post.userId !== userId) return res.status(403).json({ message: 'Not authorized to perform this action.' });
+        next();
+    } catch (err) {
+        console.error('Ownership verification error:', err);
+        res.status(500).json({ message: 'Server error.', error: err.message });
+    }
+};
+
 // Route to create a new post
 router.post('/', upload.single('imageFile'), async (req, res) => {
     const { title, content } = req.body;
     const imageFile = req.file;
+    const userId = req.user.id; // Assuming user ID is available from authentication
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
@@ -83,7 +104,8 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
             title,
             content,
             imageFile: imageFile ? imageFile.buffer : null,
-            imageFileType: imageFile ? imageFile.mimetype : null
+            imageFileType: imageFile ? imageFile.mimetype : null,
+            userId // Save the userId with the post
         });
 
         res.status(201).json({
@@ -128,6 +150,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Route to get a post by ID
 router.get('/:id', async (req, res) => {
     try {
         const post = await Post.findByPk(req.params.id);
@@ -146,7 +169,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Route to update a post by ID
-router.put('/:id', upload.single('imageFile'), async (req, res) => {
+router.put('/:id', upload.single('imageFile'), verifyOwnership, async (req, res) => {
     try {
         const updatedPost = await Post.findByPk(req.params.id);
         if (updatedPost) {
@@ -180,7 +203,7 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
 });
 
 // Route to delete a post by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyOwnership, async (req, res) => {
     try {
         const deletedPost = await Post.findByPk(req.params.id);
         if (deletedPost) {

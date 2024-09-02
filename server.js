@@ -4,11 +4,11 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const multer = require('multer');
-const helmet = require('helmet'); 
-const rateLimit = require('express-rate-limit'); 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
-const port = process.env.PORT || 5000; 
+const port = process.env.PORT || 5000;
 
 // Ensure the uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadDir)) {
 
 // Serve static files from the "uploads" directory with security headers
 app.use('/uploads', express.static(uploadDir, {
-    setHeaders: (res, path, stat) => {
+    setHeaders: (res) => {
         res.set('Content-Security-Policy', "default-src 'self'");
         res.set('X-Content-Type-Options', 'nosniff');
     }
@@ -75,28 +75,24 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Enable pre-flight across-the-board
-app.options('*', cors());
-
-// Rate limiting for auth routes
+// Rate limiting for API routes
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     message: 'Too many requests from this IP, please try again later.'
 });
-app.use('/auth', apiLimiter);
+app.use(apiLimiter);
 
-// Import and use the post routes
+// Import and use the routes
 const postRoutes = require('./routes/posts');
-app.use('/posts', postRoutes);
-
-// Integration of authRoutes
 const authRoutes = require('./routes/auth');
+
+app.use('/posts', postRoutes);
 app.use('/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server Error:', err.message || err); 
+    console.error('Server Error:', err.message || err);
     const statusCode = err.statusCode || 500;
     const errorResponse = {
         error: 'Server Error',

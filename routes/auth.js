@@ -26,7 +26,7 @@ const asyncHandler = fn => (req, res, next) => {
 };
 
 // User signup
-router.post('/signup', 
+router.post('/signup',
     // Validate email and password
     body('email').isEmail().withMessage('Please enter a valid email address'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
@@ -38,7 +38,7 @@ router.post('/signup',
 
         const { email, password } = req.body;
 
-        // Check if the user already exists by email 
+        // Check if the user already exists by email
         const { rows: existingUsers } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUsers.length > 0) {
             return res.status(400).json({ error: 'User with this email already exists' });
