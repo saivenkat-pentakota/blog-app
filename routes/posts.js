@@ -49,14 +49,14 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB('long'),  // Use BLOB for binary data in PostgreSQL
+        type: DataTypes.BLOB('long'),  
         allowNull: true,
     },
     imageFileType: {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    userId: { // Add userId field to track post ownership
+    userId: { 
         type: DataTypes.INTEGER,
         allowNull: false
     },
@@ -76,7 +76,7 @@ const Post = sequelize.define('Post', {
 // Middleware to verify ownership
 const verifyOwnership = async (req, res, next) => {
     const postId = req.params.id;
-    const userId = req.user.id; // Assuming user ID is stored in req.user from authentication
+    const userId = req.user.id; // Assuming user ID is available from authentication
 
     try {
         const post = await Post.findByPk(postId);
@@ -215,6 +215,30 @@ router.delete('/:id', verifyOwnership, async (req, res) => {
     } catch (error) {
         console.error('Error deleting post:', error);
         res.status(500).json({ message: 'Failed to delete post. Please try again.', error: error.message });
+    }
+});
+
+// Route to get posts for the authenticated user
+router.get('/user', async (req, res) => {
+    const userId = req.user.id; 
+
+    try {
+        const posts = await Post.findAll({
+            where: { userId }
+        });
+
+        // Convert image files to Base64
+        const postsWithImages = posts.map(post => {
+            if (post.imageFile) {
+                post.imageFile = post.imageFile.toString('base64');
+            }
+            return post;
+        });
+
+        res.status(200).json({ posts: postsWithImages });
+    } catch (error) {
+        console.error('Error fetching user posts:', error);
+        res.status(500).json({ message: 'Failed to fetch user posts. Please try again.', error: error.message });
     }
 });
 
