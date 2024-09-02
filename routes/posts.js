@@ -122,7 +122,7 @@ router.post('/', auth, upload.single('imageFile'), async (req, res) => {
 
 
 // Route to get all posts
-router.get('/', async (req, res) => {
+router.get('/posts', async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
 
     try {
