@@ -152,7 +152,7 @@ router.get('/', async (req, res) => {
 });
 
 // Route to get all posts for the authenticated user
-router.get('/userspost', authenticate, async (req, res) => {
+router.get('/userposts', authenticate, async (req, res) => {
     const { page = 1, limit = 5 } = req.query;
     const userId = req.user.id;
 
