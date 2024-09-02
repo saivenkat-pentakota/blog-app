@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
-const auth = require('../middleware/auth'); // Updated import
+const auth = require('./auth'); 
 
 const router = express.Router();
 
