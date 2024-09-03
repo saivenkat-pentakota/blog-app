@@ -52,7 +52,7 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB,
+        type: DataTypes.BLOB('long'),
         allowNull: true,
     },
     imageFileType: {
@@ -92,9 +92,11 @@ const verifyOwnership = async (req, res, next) => {
     }
 };
 
+// Middleware for parsing JSON and URL-encoded data
+router.use(express.json()); // For parsing application/json
+router.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
-
-// create-post
+// Create a post
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
     console.log('Received file:', req.file);
     console.log('Received body:', req.body);
@@ -124,9 +126,6 @@ router.post('/', auth, upload.single('imageFile'), async (req, res) => {
         res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message || error });
     }
 });
-
-
-
 
 // Route to get all posts
 router.get('/', async (req, res) => {

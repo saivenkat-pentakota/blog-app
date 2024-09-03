@@ -6,7 +6,9 @@ const cors = require('cors');
 const multer = require('multer');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const auth = require('./routes/auth'); 
+const auth = require('./routes/auth');
+const postRoutes = require('./routes/posts');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -88,9 +90,6 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // Import and use the routes
-const postRoutes = require('./routes/posts');
-const authRoutes = require('./routes/auth');
-
 app.use('/posts', postRoutes);
 app.use('/auth', authRoutes);
 
