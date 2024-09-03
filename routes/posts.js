@@ -90,38 +90,48 @@ const verifyOwnership = async (req, res, next) => {
     }
 };
 
+// Test authentication route
+router.get('/test-auth', auth, (req, res) => {
+    res.json({ userId: req.user.id });
+});
+
 
 // create post
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
     console.log('Received file:', req.file);
     console.log('Received body:', req.body);
 
+    // Extracting necessary fields from the request
     const { title, content } = req.body;
     const imageFile = req.file;
-    const userId = req.user?.id;
+    const userId = req.user?.id;  // Ensure the userId is correctly fetched from the auth middleware
 
+    // Basic validation
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required.' });
     }
 
     try {
+        // Creating a new post with the extracted fields
         const newPost = await Post.create({
             title,
             content,
-            imageFile: imageFile ? imageFile.buffer : null,
-            imageFileType: imageFile ? imageFile.mimetype : null,
-            userId 
+            imageFile: imageFile ? imageFile.buffer : null,  // Store image data if present
+            imageFileType: imageFile ? imageFile.mimetype : null,  // Store image file type if present
+            userId  // Attach the userId to the post
         });
 
+        // Responding with the newly created post details
         res.status(201).json({
             message: 'Post created successfully!',
             post: newPost
         });
     } catch (error) {
-        console.error('Error creating post:', error.message || error); // Detailed error logging
+        console.error('Error creating post:', error.message || error);  // Log any errors that occur
         res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message || error });
     }
 });
+
 
 
 // Route to get all posts
