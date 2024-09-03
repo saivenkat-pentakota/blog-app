@@ -97,35 +97,38 @@ router.use(express.json()); // For parsing application/json
 router.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 // Create a post
-router.post('/', auth, upload.single('imageFile'), async (req, res) => {
-    console.log('Received file:', req.file);
-    console.log('Received body:', req.body);
+    router.post('/', auth, upload.single('imageFile'), async (req, res) => {
+        console.log('Received file:', req.file);
+        console.log('Received body:', req.body);
 
-    const { title, content, userId } = req.body;
-    const imageFile = req.file;
+        const { title, content, userId } = req.body;
+        console.log('Title:', title);
+        console.log('Content:', content);
+        console.log('UserId:', userId);
+        const imageFile = req.file;
 
-    if (!title || !content || !userId) {
-        return res.status(400).json({ message: 'Title, content, and userId are required.' });
-    }
+        if (!title || !content || !userId) {
+            return res.status(400).json({ message: 'Title, content, and userId are required.' });
+        }
 
-    try {
-        const newPost = await Post.create({
-            title,
-            content,
-            imageFile: imageFile ? imageFile.buffer : null,
-            imageFileType: imageFile ? imageFile.mimetype : null,
-            userId 
-        });
+        try {
+            const newPost = await Post.create({
+                title,
+                content,
+                imageFile: imageFile ? imageFile.buffer : null,
+                imageFileType: imageFile ? imageFile.mimetype : null,
+                userId 
+            });
 
-        res.status(201).json({
-            message: 'Post created successfully!',
-            post: newPost
-        });
-    } catch (error) {
-        console.error('Error creating post:', error.message || error); // Detailed error logging
-        res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message || error });
-    }
-});
+            res.status(201).json({
+                message: 'Post created successfully!',
+                post: newPost
+            });
+        } catch (error) {
+            console.error('Error creating post:', error.message || error); // Detailed error logging
+            res.status(500).json({ message: 'Failed to create post. Please try again.', error: error.message || error });
+        }
+    });
 
 // Route to get all posts
 router.get('/', async (req, res) => {
