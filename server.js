@@ -6,6 +6,7 @@ const cors = require('cors');
 const multer = require('multer');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const auth = require('./routes/auth'); 
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -93,10 +94,12 @@ const authRoutes = require('./routes/auth');
 app.use('/posts', postRoutes);
 app.use('/auth', authRoutes);
 
-// Test authentication route
+// Define the router for test-auth route
+const router = express.Router(); // Initialize the router
 router.get('/test-auth', auth, (req, res) => {
     res.json({ userId: req.user.id });
 });
+app.use('/api', router); // Use the router
 
 // Error handling middleware
 app.use((err, req, res, next) => {
