@@ -107,6 +107,20 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Route to get details of the currently authenticated user
+router.get('/user', authenticateJWT, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ message: 'Failed to fetch user details.', error: error.message });
+    }
+});
+
+
 // Example protected route (requires authentication)
 router.get('/profile', authenticateJWT, async (req, res) => {
     try {

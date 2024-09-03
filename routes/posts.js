@@ -52,7 +52,7 @@ const Post = sequelize.define('Post', {
         allowNull: false
     },
     imageFile: {
-        type: DataTypes.BLOB('long'),
+        type: DataTypes.BLOB,
         allowNull: true,
     },
     imageFileType: {

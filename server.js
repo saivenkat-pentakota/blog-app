@@ -91,6 +91,7 @@ app.use('/api/', apiLimiter);
 
 // Import and use the routes
 app.use('/posts', postRoutes);
+
 app.use('/auth', authRoutes);
 
 // Define the router for test-auth route
@@ -101,15 +102,23 @@ router.get('/test-auth', auth, (req, res) => {
 app.use('/api', router); // Use the router
 
 // Error handling middleware
+// Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server Error:', err.message || err);
+    console.error('Server Error:', err.message || err); // Log the error for debugging
+
+    // Set status code, default to 500 if not provided
     const statusCode = err.statusCode || 500;
+
+    // Define the error response object
     const errorResponse = {
-        error: 'Server Error',
+        error: statusCode === 500 ? 'Server Error' : 'Request Error',
         details: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
     };
+
+    // Send the response
     res.status(statusCode).json(errorResponse);
 });
+
 
 // Start the server with graceful shutdown support
 const server = app.listen(port, () => {
