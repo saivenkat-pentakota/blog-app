@@ -94,6 +94,11 @@ app.use('/posts', postRoutes);
 
 app.use('/auth', authRoutes);
 
+// cookiePraser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+
 // Define the router for test-auth route
 const router = express.Router(); // Initialize the router
 router.get('/test-auth', auth, (req, res) => {
