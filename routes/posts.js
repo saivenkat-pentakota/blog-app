@@ -7,17 +7,19 @@ const auth = require('./auth');
 const router = express.Router();
 
 // Multer configuration for file uploads (in memory)
-const storage = multer.memoryStorage();
-const upload = multer({ 
+const storage = multer.memoryStorage(); // Store file in memory
+const upload = multer({
     storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error('Invalid file type'), false);
+        const fileTypes = /jpeg|jpg|png|gif/;
+        const extname = fileTypes.test(file.originalname.toLowerCase());
+        const mimetype = fileTypes.test(file.mimetype);
+        if (mimetype && extname) {
+            return cb(null, true);
         }
-        cb(null, true);
-    },
-    limits: { fileSize: 5 * 1024 * 1024 }  // Limit file size to 5MB
+        cb(new Error('Invalid file type. Only JPEG, JPG, PNG, and GIF are allowed.'));
+    }
 });
 
 // Initialize Sequelize

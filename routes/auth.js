@@ -43,8 +43,12 @@ const User = sequelize.define('User', {
 // Middleware to authenticate JWT tokens
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    if (!authHeader) {
+        console.log('No authorization header provided');
+        return res.status(401).json({ message: 'Authorization header required.' });
+    }
 
+    const token = authHeader.split(' ')[1];
     if (!token) {
         console.log('No token provided');
         return res.status(401).json({ message: 'Authentication token required.' });
@@ -55,6 +59,7 @@ const authenticateJWT = (req, res, next) => {
             console.error('Token verification failed:', err.message);
             return res.status(403).json({ message: 'Invalid or expired token.' });
         }
+
         req.user = user;
         next();
     });
