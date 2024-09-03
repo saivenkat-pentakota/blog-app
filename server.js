@@ -93,6 +93,11 @@ const authRoutes = require('./routes/auth');
 app.use('/posts', postRoutes);
 app.use('/auth', authRoutes);
 
+// Test authentication route
+router.get('/test-auth', auth, (req, res) => {
+    res.json({ userId: req.user.id });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message || err);

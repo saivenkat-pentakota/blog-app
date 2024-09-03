@@ -90,10 +90,7 @@ const verifyOwnership = async (req, res, next) => {
     }
 };
 
-// Test authentication route
-router.get('/test-auth', auth, (req, res) => {
-    res.json({ userId: req.user.id });
-});
+
 
 // create-post
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
