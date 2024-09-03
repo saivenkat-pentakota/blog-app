@@ -21,7 +21,7 @@ const sequelize = new Sequelize(
     }
 );
 
-sequelize.sync({ alter: true })
+sequelize.sync()
     .then(() => console.log('Database synchronized'))
     .catch(err => console.error('Database synchronization error:', err));
 
@@ -35,21 +35,15 @@ const User = sequelize.define('User', {
     password: {
         type: DataTypes.STRING,
         allowNull: false
-    },
-    createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: Sequelize.NOW
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: Sequelize.NOW
     }
+}, {
+    timestamps: true
 });
 
 // Middleware to authenticate JWT tokens
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         console.log('No token provided');
@@ -59,7 +53,7 @@ const authenticateJWT = (req, res, next) => {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             console.error('Token verification failed:', err.message);
-            return res.status(403).json({ message: 'Invalid token.' });
+            return res.status(403).json({ message: 'Invalid or expired token.' });
         }
         req.user = user;
         next();

@@ -93,6 +93,9 @@ const verifyOwnership = async (req, res, next) => {
 
 // create post
 router.post('/', auth, upload.single('imageFile'), async (req, res) => {
+    console.log('Received file:', req.file);
+    console.log('Received body:', req.body);
+
     const { title, content } = req.body;
     const imageFile = req.file;
     const userId = req.user?.id;
